@@ -17,15 +17,14 @@ enum state{ELU, ACTIVABLE};
 struct Process {
 	int pid;
 	char name[NAME_SIZE];
-	enum state s;
+	enum state state;
 	int32_t save_zone[SAVE_ZONE_SIZE];
 	int32_t stack[STACK_SIZE];
 };
 
 void idle(void);
 void proc1(void);
-struct Process* get_elu(void);
-void set_pid_of_ELU(int32_t pid);
-
+struct Process* get_elected_proc(void);
+void set_elected_proc(struct Process* proc);
 struct Process* get_proc_table(void);
 #endif

@@ -1,56 +1,20 @@
 #include "scheduler_coop.h"
 
-
-struct Process proc_table[PROC_NB];
-int32_t actif;
-
+// *** Static Function Definition : 
 static int32_t mon_pid(void);
 static char* mon_nom(void);
 static void ordonnance(void);
-
 extern void ctx_sw(int32_t* a, int32_t* b);
 
-/*
-void idle(void)
-{
-	for(int i = 0; i < 3; ++i){
-		printf("[idle] je tente de passer la main a proc1...\n");
-		ctx_sw(proc_table[0].save_zone, proc_table[1].save_zone);
-	}
-}
+// *** Global Variables :
+struct Process proc_table[PROC_NB];
+struct Process* elected_proc;
 
-void proc1(void)
-{
-	for(int i = 0; i < 3; ++i){
-		printf("[proc1] idle m'a donne la main\n");
-		printf("[proc1] j'arrete le systeme\n");
-		ctx_sw(proc_table[1].save_zone, proc_table[0].save_zone);
-	}
-	hlt();
-}
+/// *** Function definition :
+
+/**
+ * Function describing the execution of process Idle
 */
-/*
-void idle(void)
-{
-	for (int i = 0; i < 3; i++) {
-		printf("[idle] je tente de passer la main a proc1...\n");
-		ctx_sw(proc_table[0].save_zone, proc_table[1].save_zone);
-		printf("[idle] proc1 m'a redonne la main\n");
-	}
-	printf("[idle] je bloque le systeme\n");
-	hlt();
-}
-
-void proc1(void)
-{
-
-	for (int i = 0; i < 3; i++) {
-		printf("[proc1] idle m'a donne la main\n");
-		printf("[proc1] je tente de lui la redonner...\n");
-		ctx_sw(proc_table[1].save_zone, proc_table[0].save_zone);
-	}
-}
-//*/
 void idle(void)
 {
 	for (;;) {
@@ -60,6 +24,9 @@ void idle(void)
 	}
 }
 
+/**
+ * Function describing the execution of process proc1
+*/
 void proc1(void) {
 	for (;;) {
 		printf("[%s] pid = %i\n", mon_nom(), mon_pid());
@@ -68,46 +35,64 @@ void proc1(void) {
 	}
 }
 
-void set_pid_of_ELU(int32_t pid)
+/**
+ * Sets the pid of the process that will be executed in first.
+ * @param pid is the pid of the process to execute in first.
+*/
+void set_elected_proc(struct Process* proc)
 {
-	actif = pid;
+	elected_proc = proc;
 }
 
-struct Process* get_elu(void)
+/**
+ * @return the process that is currently elected 
+ *          or NULL if there is no elected process.
+*/
+struct Process* get_elected_proc(void)
 {
-	for(int i = 0; i < PROC_NB; ++i)
-		if(proc_table[i].s == ELU)
-			return &proc_table[i];
-		
-	return (struct Process*)NULL;
+	return elected_proc;
 }
 
+/**
+ * @return the pid of the process that is currently elected 
+ *          or -1 if there is no elected process.
+*/
 static int32_t mon_pid(void)
 {
-	struct Process* elu = get_elu();
-	return (elu != NULL) ? elu->pid : -1;
+	return (elected_proc != NULL) ? elected_proc->pid : -1;
 }
 
+/**
+ * @return the name of the process that is currently elected 
+ *          or an empty string if there is no elected process.
+*/
 static char* mon_nom(void)
 {
-	struct Process* elu = get_elu();
-	return (elu != NULL) ? elu->name : "merde";
+	return (elected_proc != NULL) ? elected_proc->name : "";
 }
 
+/**
+ * @ returns the processus table 
+*/
 struct Process* get_proc_table(void)
 {
 	return proc_table;
 }
 
+/**
+ * Uses the Round-Robin Scheduling to decide wich process will have the CPU next
+*/
 void ordonnance(void)
 {
-
-	struct Process* old = proc_table + actif;
-	actif = ((proc_table + actif)->pid + 1) % PROC_NB;
-	struct Process* new = proc_table + actif;
-	old->s = ACTIVABLE;
-	new->s = ELU;
-	ctx_sw(old->save_zone, new->save_zone);
+	// We set the statue of the current elected proc to ACTIVABLE
+	struct Process* former_elected = proc_table + elected_proc->pid;
+	former_elected->state = ACTIVABLE;
+	// Get the next process in the proc table and set its state to ELU
+	elected_proc = &proc_table[((proc_table + elected_proc->pid)->pid + 1)
+				  % PROC_NB];
+	elected_proc->state = ELU;
+	// Switch the current elected process and the next one :
+	ctx_sw(former_elected->save_zone, 
+	       proc_table[elected_proc->pid].save_zone);
 }
 
-// actif : pid ou process directement.

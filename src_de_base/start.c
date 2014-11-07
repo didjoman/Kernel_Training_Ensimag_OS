@@ -29,26 +29,31 @@ extern void ctx_sw(int32_t a, int32_t b);
 
 void kernel_start(void)
 {
-	// Init des parametres d'affichage
+	// Init of the printing parameters
 	set_text_format(0, 3, 15);
 	place_curseur(0,0);
 
-	// Gestion des processus :
+	// Process management :
 	struct Process* proc_table = get_proc_table();
 
 	// Initialisation du processus Idle
 	proc_table[0].pid = 0;
-	strncpy(proc_table[0].name, "idle",4);
-	proc_table[0].s = ELU;
-	set_pid_of_ELU(0);
-
+	strcpy(proc_table[0].name, "idle");
+	proc_table[0].state = ELU;
+	set_elected_proc(proc_table);
 
 	// Initialisation du processus Proc1
 	proc_table[1].pid = 1;
-	strncpy(proc_table[1].name, "proc1", 5);
-	proc_table[1].s = ACTIVABLE;
-	proc_table[1].save_zone[1] = (int32_t)(proc_table[1].stack+511);
-	proc_table[1].stack[STACK_SIZE - 1] = (int32_t)proc1; // la stack est remplie en partant de la fin
+	strcpy(proc_table[1].name, "proc1");
+	proc_table[1].state = ACTIVABLE;
+	// At the first execution the context of proc1 has never been saved.
+	// |- We need to store a pointer on the stack in the register save zone
+	proc_table[1].save_zone[1] = 
+		(int32_t)(proc_table[1].stack+(STACK_SIZE - 1));
+	// |- The stack normally stocks the adress of the function that were 
+	// |  running before the interruption of the process :
+	proc_table[1].stack[STACK_SIZE - 1] = (int32_t)proc1; 
+	// |- Rq : the stack is fulfilled from the higher index
 		
 	// Lancement idle
 	efface_ecran(); 
