@@ -26,37 +26,31 @@ uint32_t fact(uint32_t n)
 }
 
 extern void ctx_sw(int32_t a, int32_t b);
+extern void proc1(void);
 
 void kernel_start(void)
 {
 	// Init of the printing parameters
 	set_text_format(0, 3, 15);
 	place_curseur(0,0);
-
-	// Process management :
-	struct Process* proc_table = get_proc_table();
-
-	// Initialisation du processus Idle
-	proc_table[0].pid = 0;
-	strcpy(proc_table[0].name, "idle");
-	proc_table[0].state = ELU;
-	set_elected_proc(proc_table);
-
-	// Initialisation du processus Proc1
-	proc_table[1].pid = 1;
-	strcpy(proc_table[1].name, "proc1");
-	proc_table[1].state = ACTIVABLE;
-	// At the first execution the context of proc1 has never been saved.
-	// |- We need to store a pointer on the stack in the register save zone
-	proc_table[1].save_zone[1] = 
-		(int32_t)(proc_table[1].stack+(STACK_SIZE - 1));
-	// |- The stack normally stocks the adress of the function that were 
-	// |  running before the interruption of the process :
-	proc_table[1].stack[STACK_SIZE - 1] = (int32_t)proc1; 
-	// |- Rq : the stack is fulfilled from the higher index
-		
-	// Lancement idle
 	efface_ecran(); 
+
+	// Initialisation du processus Proc1, 2, 3, 4, 5, 6
+	int32_t process1 = cree_processus(proc1, "proc1");
+	set_state_by_pid(process1, ELU);
+
+	int32_t proc2 = cree_processus(proc1, "proc2");
+	int32_t proc3 = cree_processus(proc1, "proc3");
+	int32_t proc4 = cree_processus(proc1, "proc4");
+	int32_t proc5 = cree_processus(proc1, "proc5");
+	int32_t proc6 = cree_processus(proc1, "proc6");
+	(void) proc2;
+	(void) proc3;
+	(void) proc4;
+	(void) proc5;
+	(void) proc6;
+
+	// Lancement idle
 	idle();
 
 	//test_module_put_bytes();
