@@ -22,6 +22,7 @@ struct Process* elected_proc;
 
 /// *** Function definition :
 
+// TODO : l'idle devrait etre lancée uniquement lorsqu'il n'y a pas d'autres processus activables ..
 void init(void)
 {
 	(void) cree_processus(idle, "idle");
