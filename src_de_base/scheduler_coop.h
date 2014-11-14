@@ -35,6 +35,6 @@ struct proc_queue{
 void idle(void);
 void proc1(void);
 int32_t cree_processus(void (*code)(void), char *nom);
-
+void init(void);
 
 #endif

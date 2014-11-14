@@ -36,6 +36,7 @@ void kernel_start(void)
 	efface_ecran(); 
 
 	// Initialisation du processus Proc1, 2, 3, 4, 5, 6
+	init();
 	int32_t process1 = cree_processus(proc1, "proc1");
 	int32_t proc2 = cree_processus(proc1, "proc2");
 	int32_t proc3 = cree_processus(proc1, "proc3");

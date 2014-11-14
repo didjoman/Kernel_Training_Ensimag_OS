@@ -22,6 +22,12 @@ struct Process* elected_proc;
 
 /// *** Function definition :
 
+void init(void)
+{
+	(void) cree_processus(idle, "idle");
+	load_elected();
+}
+
 /**
  * Function describing the execution of process Idle
 */
