@@ -37,13 +37,12 @@ void kernel_start(void)
 
 	// Initialisation du processus Proc1, 2, 3, 4, 5, 6
 	int32_t process1 = cree_processus(proc1, "proc1");
-	set_state_by_pid(process1, ELU);
-
 	int32_t proc2 = cree_processus(proc1, "proc2");
 	int32_t proc3 = cree_processus(proc1, "proc3");
 	int32_t proc4 = cree_processus(proc1, "proc4");
 	int32_t proc5 = cree_processus(proc1, "proc5");
 	int32_t proc6 = cree_processus(proc1, "proc6");
+	(void) process1;
 	(void) proc2;
 	(void) proc3;
 	(void) proc4;

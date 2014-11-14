@@ -6,9 +6,17 @@ static int32_t mon_pid(void);
 static char* mon_nom(void);
 static void ordonnance(void);
 extern void ctx_sw(int32_t* a, int32_t* b);
+static void load_elected();
+static void unload_elected();
+
+static void push(struct proc_queue* queue, struct Process* p);
+static struct Process* pop(struct proc_queue* queue);
+static bool empty(struct proc_queue* queue);
+
 
 // *** Global Variables :
-struct Process* proc_table[PROC_NB];
+//struct Process* proc_table[PROC_NB];
+struct proc_queue activables;
 int32_t last_proc_id = -1;
 struct Process* elected_proc;
 
@@ -38,24 +46,6 @@ void proc1(void) {
 }
 
 /**
- * Sets the pid of the process that will be executed in first.
- * @param pid is the pid of the process to execute in first.
-*/
-void set_elected_proc(struct Process* proc)
-{
-	elected_proc = proc;
-}
-
-/**
- * @return the process that is currently elected 
- *          or NULL if there is no elected process.
-*/
-struct Process* get_elected_proc(void)
-{
-	return elected_proc;
-}
-
-/**
  * @return the pid of the process that is currently elected 
  *          or -1 if there is no elected process.
 */
@@ -74,14 +64,6 @@ static char* mon_nom(void)
 }
 
 /**
- * @ returns the processus table 
-*/
-struct Process** get_proc_table(void)
-{
-	return proc_table;
-}
-
-/**
  * Uses the Round-Robin Scheduling to decide wich process will have the CPU next
 */
 void ordonnance(void)
@@ -89,22 +71,23 @@ void ordonnance(void)
 
 	// We set the statue of the current elected proc to ACTIVABLE
 	struct Process* former_elected = elected_proc;
-	// If there is no process, there is nothing to schedule
-	if(former_elected == NULL)
-		return;
-	// Else the current process goes from ELU to ACTIVABLE state
-	set_state_of_process(former_elected, ACTIVABLE);
-	// We get the next process in the proc table and set its state to ELU
-	elected_proc = proc_table[(former_elected->pid + 1) % PROC_NB];
+	// Else the current elected returns to the list of activable processes
+	unload_elected();
+	// We get the next activable process & set its state to ELU
+	load_elected();
+
+	// If there is no activable process, there is nothing to schedule
 	if(elected_proc == NULL)
-		elected_proc = proc_table[0];
-	set_state_of_process(elected_proc, ELU);
-	
+		return;
+
 	// Switch the current elected process and the next one :
-	ctx_sw(former_elected->save_zone, 
-	       proc_table[elected_proc->pid]->save_zone);
+	if(former_elected == NULL) // case in witch no processes where running
+		former_elected = elected_proc;
+
+	ctx_sw(former_elected->save_zone, elected_proc->save_zone);
 }
 
+// TODO : Commenter
 int32_t cree_processus(void (*code)(void), char *nom)
 {
 	// We have created to much processes, we can not creat one more
@@ -113,41 +96,105 @@ int32_t cree_processus(void (*code)(void), char *nom)
 
 	// If possible we create the process : 
 	++last_proc_id;
-        proc_table[last_proc_id] = (struct Process*) malloc(sizeof(struct Process));
 
-        proc_table[last_proc_id]->pid = last_proc_id;
-        strncpy(proc_table[last_proc_id]->name, nom, NAME_SIZE);
-	proc_table[last_proc_id]->state = ACTIVABLE;
+        struct Process* proc = (struct Process*) malloc(sizeof(struct Process));
+        proc->pid = last_proc_id;
+        strncpy(proc->name, nom, NAME_SIZE);
+	proc->state = ACTIVABLE;
 
         // At the first execution the context of proc1 has never been saved.
         // |- We need to store a pointer on the stack in the register save zone
-        proc_table[last_proc_id]->save_zone[ESP_REG_ID] =
-                (int32_t)(proc_table[last_proc_id]->stack+(STACK_SIZE - 1));
+        proc->save_zone[ESP_REG_ID] =
+                (int32_t)(proc->stack+(STACK_SIZE - 1));
         // |- The stack normally stocks the adress of the function that were
         // |  running before the interruption of the process :
-        proc_table[last_proc_id]->stack[STACK_SIZE - 1] = (int32_t)code;
+        proc->stack[STACK_SIZE - 1] = (int32_t)code;
         // |- Rq : the stack is fulfilled from the higher index
-
+	
+	// We add the new process to the list of activables porcesses
+	push(&activables, proc);
+	
 	return last_proc_id;
 }
 
-void set_state_of_process(struct Process* process, enum state s)
+// TODO faire fonction init qui met un processus idle en proc elu ! 
+/*
+le processus idle (qui a par convention le pid 0) est le processus par défaut : en effet, dans un système, il doit toujours y avoir au moins un processus actif, car le système ne doit jamais s'arrêter ; 
+*/
+// TODO : Commenter
+static void load_elected()
 {
-	process->state = s;
-	if(s == ELU)
-		set_elected_proc(process);
+	// We load the next activable process
+	struct Process* proc = pop(&activables);
 
+	if(proc == NULL)
+		return;
+
+	// If there is one, it becomes the new elected process
+	elected_proc = proc;
+	elected_proc->state = ELU;
 }
 
-void set_state_by_pid(int32_t pid, enum state s)
+// TODO : Commenter
+static void unload_elected()
 {
-	struct Process* process = get_process(pid);
+	if(elected_proc == NULL) 
+		return;
 
-	if(process != NULL)
-		set_state_of_process(process, s);	
+	elected_proc->state = ACTIVABLE;
+	push(&activables, elected_proc);
 }
 
-struct Process* get_process(int32_t pid)
+/******************************************************************************/
+/*************************** DATA STRUCTURE : QUEUE ***************************/
+/******************************************************************************/
+
+// TODO : put it in an other file;
+
+/**
+ * Add Process in tail
+ * @param queue is the queue we want to add the process to.
+ * @param p is a pointer to the process to insert on the queue 
+*/
+static void push(struct proc_queue* queue, struct Process* p)
 {
-	return proc_table[pid];
+	// If the queue is empty, the new proc will be the first and last one
+	if(empty(queue)){
+		queue->head = p;
+		queue->tail = p;
+	} else {
+		// Insert the process in tail.
+		queue->tail->next = p;
+		queue->tail = queue->tail->next;
+	}
+	// We make sure that the process has no next proc, since it is the last.
+	p->next = NULL;
+}
+
+/**
+ * Pop the first element of the queue
+ * @param queue is the queue we want to add the process to.
+*/
+static struct Process* pop(struct proc_queue* queue)
+{
+	struct Process* tmp = queue->head;
+	// Update the new head of the list;
+	if(!empty(queue))
+		queue->head = queue->head->next;
+
+	// The process is removed from the list, so it has next proc any more
+	if(tmp != NULL)
+		tmp->next = NULL;
+
+	return tmp;
+}
+
+
+/**
+ * @param queue is the queue we want to add the process to.
+ * @return true if the queue is empty, false else.
+*/
+static bool empty(struct proc_queue* queue)
+{
+	return queue->head == NULL;
 }
