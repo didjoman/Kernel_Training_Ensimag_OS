@@ -82,11 +82,6 @@ void ordonnance(void)
 	unload_elected();
 	// We get the next activable process & set its state to ELU
 	load_elected();
-
-	// If there is no activable process, there is nothing to schedule
-	if(elected_proc == NULL)
-		return;
-
 	// Switch the current elected process and the next one :
 	ctx_sw(former_elected->save_zone, elected_proc->save_zone);
 }
