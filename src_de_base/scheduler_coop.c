@@ -88,9 +88,6 @@ void ordonnance(void)
 		return;
 
 	// Switch the current elected process and the next one :
-	if(former_elected == NULL) // case in witch no processes where running
-		former_elected = elected_proc;
-
 	ctx_sw(former_elected->save_zone, elected_proc->save_zone);
 }
 
