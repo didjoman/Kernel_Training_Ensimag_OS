@@ -1,6 +1,6 @@
 #include "uptime.h"
 
-uint32_t uptime_ms = 0;
+time_t uptime_ms = 0;
 
 void init_clock()
 {
@@ -41,7 +41,8 @@ void tic_PIT(void)
 	sprintf(uptime_string, "%02d:%02d:%02d", hh,mm,ss);
 	// print the uptime in the right corner of the screen.
 	print_uptime(uptime_string); 
-
+	// Asks the scheduler to launch the next process.
+	ordonnance();
 }
 
 
@@ -74,4 +75,8 @@ void masque_IRQ(uint32_t num_IRQ, bool masque)
 	outb(mask_val, 0x21);  
 }
 
+time_t get_uptime()
+{
+	return uptime_ms;
+}
 

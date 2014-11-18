@@ -27,6 +27,9 @@ uint32_t fact(uint32_t n)
 
 extern void ctx_sw(int32_t a, int32_t b);
 extern void proc1(void);
+extern void proc2(void);
+extern void proc3(void);
+extern void proc4(void);
 
 void kernel_start(void)
 {
@@ -37,28 +40,19 @@ void kernel_start(void)
 
 	// Initialisation du processus Proc1, 2, 3, 4, 5, 6
 	init();
-	int32_t process1 = cree_processus(proc1, "proc1");
-	int32_t proc2 = cree_processus(proc1, "proc2");
-	int32_t proc3 = cree_processus(proc1, "proc3");
-	int32_t proc4 = cree_processus(proc1, "proc4");
-	int32_t proc5 = cree_processus(proc1, "proc5");
-	int32_t proc6 = cree_processus(proc1, "proc6");
-	(void) process1;
-	(void) proc2;
-	(void) proc3;
-	(void) proc4;
-	(void) proc5;
-	(void) proc6;
-
+	(void)cree_processus(proc1, "proc1");
+	(void)cree_processus(proc2, "proc2");
+	(void)cree_processus(proc3, "proc3");
+	(void)cree_processus(proc4, "proc4");
+	//test();
 	// Lancement idle
+	test_module_uptime();	
 	idle();
-
+	
 	//test_module_put_bytes();
 	
 	//efface_ecran();
 	
-	//test_module_uptime();
-
 	// Démasquer les interruptions externes 
 	//sti();
 	
@@ -72,6 +66,10 @@ void kernel_start(void)
 // Used to say that traitant_IT_32 is defined in an external file (traitant.s)
 extern void traitant_IT_32(void); 
 
+/******************************************************************************/
+/****************** FONCTIONS DE TEST DES MODULES IMPLÉMENTÉS *****************/
+/******************************************************************************/
+
 void test_module_uptime()
 {
 	// [Unit Testing] Test print_uptime
@@ -79,8 +77,6 @@ void test_module_uptime()
 
 	// [Unit Testing] Test Tic_PIT function 
 	//tic_PIT(); 
-
-
 
 	// Setting of the clock frequency :
 	init_clock();
