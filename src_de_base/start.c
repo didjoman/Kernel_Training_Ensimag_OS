@@ -45,6 +45,7 @@ void kernel_start(void)
 	(void)cree_processus(proc3, "proc3");
 	(void)cree_processus(proc4, "proc4");
 	//test();
+	
 	// Lancement idle
 	test_module_uptime();	
 	idle();
