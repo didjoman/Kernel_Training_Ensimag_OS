@@ -40,10 +40,6 @@ void kernel_start(void)
 
 	// Initialisation du processus Proc1, 2, 3, 4, 5, 6
 	init();
-	(void)cree_processus(proc1, "proc1");
-	(void)cree_processus(proc2, "proc2");
-	(void)cree_processus(proc3, "proc3");
-	(void)cree_processus(proc4, "proc4");
 	//test();
 	
 	// Lancement idle

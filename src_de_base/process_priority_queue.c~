@@ -1,0 +1,70 @@
+#include "process_priority_queue.h"
+
+/**
+ * Add Process at the right place in the queue ( i.e. after the last process 
+ * finishing earlier)
+ * @param queue is the queue of process we want to add the process into.
+ * @param p is a pointer to the process we want to insert in the queue. 
+ */
+void push_p(struct proc_priority_queue* queue, struct Process* p)
+{
+	// If the queue is empty, the new proc will be the first and last one
+	if(empty_p(queue)){
+		queue->head = p;
+		queue->tail = p;
+
+	} else {
+		// Look for the right place to insert the new process
+		// Depending on it's get up time.
+		struct Process* tmp = queue->head;
+		while(tmp->next && (tmp->next->get_up < p->get_up))
+			tmp = tmp -> next;
+
+		// If we insert in end we update the tail of the queue
+		if(!tmp->next)
+			queue->tail = p;
+
+		// Insert the process at the right place 
+		// i.e. after the last process finishing earlier
+		struct Process* next = tmp->next;
+		tmp->next = p;
+		p->next = next;
+	}
+}
+
+/**
+ * Pop the first element of the queue for wich the get-up-time is 
+ * inferior or equal to the get-up-time passed in parameter.
+ * Or NULL if there is none.
+ * @param queue is the queue of process.
+ * @param get_up is the max admissible get_up time for the process to pop.
+ */
+struct Process* pop_p(struct proc_priority_queue* queue, time_t get_up)
+{
+	struct Process* tmp = queue->head;
+
+	// No element to pop (empty queue OR next elmt's get_up time is to big)
+	if(!queue->head || (queue->head && queue->head->get_up > get_up))
+		return NULL;
+
+	// Else, there is an elemt to pop :
+	// Update the new head of the queue;
+	if(!empty_p(queue))
+		queue->head = queue->head->next;
+
+	// The process is removed from the queue, so it has no next proc any more
+	if(tmp != NULL)
+		tmp->next = NULL;
+
+	return tmp;
+}
+
+
+/**
+ * @param queue is the queue of process.
+ * @return true if the queue is empty, false else.
+ */
+bool empty_p(struct proc_priority_queue* queue)
+{
+	return queue->head == NULL;
+}
