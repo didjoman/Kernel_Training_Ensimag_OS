@@ -46,9 +46,9 @@ void init(void)
 void idle()
 {
 	for (;;) {
-		sti();
-		hlt();
-		cli();
+		sti(); // Active les interruptions
+		hlt(); // bloque le processus jusqu'a la réception de la prochaine IT
+		cli(); // désactive les interruptions
 	}
 }
 
