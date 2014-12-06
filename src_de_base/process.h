@@ -17,18 +17,18 @@
 
 enum state{ELU, ACTIVABLE, ENDORMI, MOURANT};
 
-struct Process {
+struct process_t {
         int pid;
         char name[NAME_SIZE];
         enum state state;
         int32_t save_zone[SAVE_ZONE_SIZE];
         int32_t stack[STACK_SIZE];
 	time_t get_up;
-        struct Process* next;
+        struct process_t* next;
 };
 
-struct Process* new_process(int pid, enum state state, void (*code)(void), 
+struct process_t* new_process(int pid, enum state state, void (*code)(void), 
 			    void (*fin)(void), char *name);
-void destroy_process(struct Process* p);
+void destroy_process(struct process_t* p);
 
 #endif

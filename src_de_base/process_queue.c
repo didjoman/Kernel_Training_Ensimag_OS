@@ -6,7 +6,7 @@
  * @param queue is the queue we want to add the process to.
  * @param p is a pointer to the process to insert on the queue 
  */
-void push(struct proc_queue* queue, struct Process* p)
+void push(struct proc_queue* queue, struct process_t* p)
 {
 	// If the queue is empty, the new proc will be the first and last one
 	if(empty(queue)){
@@ -25,9 +25,9 @@ void push(struct proc_queue* queue, struct Process* p)
  * Pop the first element of the queue
  * @param queue is the queue we want to add the process to.
  */
-struct Process* pop(struct proc_queue* queue)
+struct process_t* pop(struct proc_queue* queue)
 {
-	struct Process* tmp = queue->head;
+	struct process_t* tmp = queue->head;
 	// Update the new head of the list;
 	if(!empty(queue))
 		queue->head = queue->head->next;

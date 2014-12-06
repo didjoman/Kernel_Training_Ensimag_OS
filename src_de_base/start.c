@@ -7,29 +7,17 @@
 // on peut s'entrainer a utiliser GDB avec ce code de base
 // par exemple afficher les valeurs de x, n et res avec la commande display
 
-uint32_t fact(uint32_t n);
 void kernel_start(void);
 void test_module_put_bytes();
 void test_module_uptime();
 
-
-// une fonction bien connue
-uint32_t fact(uint32_t n)
-{
-	uint32_t res;
-	if (n <= 1) {
-		res = 1;
-	} else {
-		res = fact(n - 1) * n;
-	}
-	return res;
-}
 
 extern void ctx_sw(int32_t a, int32_t b);
 extern void proc1(void);
 extern void proc2(void);
 extern void proc3(void);
 extern void proc4(void);
+extern void traitant_IT_32(void); 
 
 void kernel_start(void)
 {
@@ -40,19 +28,20 @@ void kernel_start(void)
 
 	// Initialisation du processus Proc1, 2, 3, 4, 5, 6
 	init();
-	//test();
-	
-	// Lancement idle
-	test_module_uptime();	
+
+        // Setting of the clock frequency :
+        init_clock();
+
+        // Binds the interrupt handler "traitant_IT_32" to the cell number 32 of
+	//  the IDT (Interrupt Descriptor Table) 
+	init_traitant_IT(32, traitant_IT_32);
+
+        // Unmask IRQ0 : the signals can go through the interrupt controller
+	masque_IRQ(0, 0);
+        
+        // Lancement idle
 	idle();
-	
-	//test_module_put_bytes();
-	
-	//efface_ecran();
-	
-	// Démasquer les interruptions externes 
-	//sti();
-	
+        
 	// on ne doit jamais sortir de kernel_start
 	while (1) {
 		// cette fonction arrete le processeur
@@ -60,15 +49,19 @@ void kernel_start(void)
 	}
 }
 
-// Used to say that traitant_IT_32 is defined in an external file (traitant.s)
-extern void traitant_IT_32(void); 
-
 /******************************************************************************/
 /****************** FONCTIONS DE TEST DES MODULES IMPLÉMENTÉS *****************/
 /******************************************************************************/
 
+/**
+ * Ces fonctions ont été utilisées durant le développement pour tester le bon 
+ * fonctionnement des séances.
+ */
+
 void test_module_uptime()
 {
+        /* Fonction créée pour tester le bon fonctionnement du fichier uptime.c */
+        
 	// [Unit Testing] Test print_uptime
 	//print_uptime("10:29");
 
@@ -97,10 +90,6 @@ void test_module_uptime()
 
 void test_module_put_bytes()
 {
-	uint32_t x = fact(5);
-	// quand on saura gerer l'ecran, on pourra afficher x
-	(void)x; 
-
 	/* Test of screen clearing */ 
 	efface_ecran();
 

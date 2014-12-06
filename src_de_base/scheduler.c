@@ -15,7 +15,8 @@ extern void ctx_sw(int32_t* a, int32_t* b);
 
 // *** Global Variables :
 int32_t last_proc_id = -1;
-struct Process* elected_proc;
+int32_t nb_pocess_running = 0;
+struct process_t* elected_proc;
 
 // *** Data Structures :
 struct proc_priority_queue sleepings;
@@ -25,8 +26,8 @@ struct proc_queue dyings;
 // *** Function definition :
 
 /**
- * Init creates the idle process (running when there is no other program to run)
- * and some other processes (for the demonstration). 
+ * Init creates the idle process_t (running when there is no other program to run)
+ * and some other process_tes (for the demonstration). 
 */
 void init(void)
 {
@@ -115,7 +116,7 @@ static time_t nbr_secondes(void)
 
 /**
  * @return the pid of the process that is currently elected 
- *          or -1 if there is no elected process.
+ *          or -1 if there is no elected process  (should not hapen).
 */
 static int32_t mon_pid(void)
 {
@@ -124,7 +125,7 @@ static int32_t mon_pid(void)
 
 /**
  * @return the name of the process that is currently elected 
- *          or an empty string if there is no elected process.
+ *          or an empty string if there is no elected process (should not hapen)
 */
 static char* mon_nom(void)
 {
@@ -142,7 +143,7 @@ void ordonnance(void)
 	// We start by waking up the sleeping processes (add them to activables)
 	wake_up();
 	// We set the statue of the current elected proc to ACTIVABLE
-	struct Process* former_elected = elected_proc;
+	struct process_t* former_elected = elected_proc;
 	// Else the current elected returns to the list of activable processes
 	unload_elected();
 	// We get the next activable process & set its state to ELU
@@ -165,11 +166,12 @@ void ordonnance(void)
 int32_t cree_processus(void (*code)(void), char *nom)
 {
 	// We have created to much processes, we can not creat one more
-	if(last_proc_id + 1 > PID_MAX)
+	if(nb_pocess_running + 1 > PID_MAX)
 		return -1;
 
 	// If possible we create the process : 
-        struct Process* proc = new_process(++last_proc_id, ACTIVABLE, code, 
+        ++nb_pocess_running;
+        struct process_t* proc = new_process(++last_proc_id, ACTIVABLE, code, 
 					   fin_processus, nom);
 	
 	// We add the new process to the list of activables porcesses
@@ -184,8 +186,8 @@ int32_t cree_processus(void (*code)(void), char *nom)
 static void load_elected()
 {
 	// We load the next activable process
-	struct Process* proc = pop(&activables);
-	if(proc == NULL)
+	struct process_t* proc = pop(&activables);
+	if(proc == NULL) // should never happen bc idle
 		return;
 
 	// If there is one, it becomes the new elected process
@@ -245,7 +247,7 @@ void dors(time_t nbr_secs)
 void wake_up(void)
 {
 	time_t current_time = get_uptime();
-	struct Process* p;
+	struct process_t* p;
 	while((p = pop_p(&sleepings, current_time)) != NULL){
 		p->state = ACTIVABLE;
 		push(&activables, p);
@@ -269,8 +271,10 @@ void fin_processus(void){
  * This function frees all the processes contained in the dying queue.
  */
 void free_dyings(void){
-	struct Process* p;
-	while((p = pop(&dyings)) != NULL)
+	struct process_t* p;
+	while((p = pop(&dyings)) != NULL){
+                --nb_pocess_running;
 		destroy_process(p);
+        }
 }
 

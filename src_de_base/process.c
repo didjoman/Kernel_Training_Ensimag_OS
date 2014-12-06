@@ -3,11 +3,11 @@
 
 //extern void fin_processus(void);
 
-struct Process* new_process(int pid, enum state state, void (*code)(void),
+struct process_t* new_process(int pid, enum state state, void (*code)(void),
 			    void (*fin)(void), char *name)
 {
 	// Allocation of a new pointer pointing to the Process data struct.
-        struct Process* proc = (struct Process*) malloc(sizeof(struct Process));
+        struct process_t* proc = (struct process_t*) malloc(sizeof(struct process_t));
 	if(!proc){
 		fprintf(stderr, "Allocation of a new process failed.");
 		//exit(EXIT_FAILURE); // NOT IMPLEMENTED IN STDLIB.H ...
@@ -34,7 +34,7 @@ struct Process* new_process(int pid, enum state state, void (*code)(void),
 	return proc;
 }
 
-void destroy_process(struct Process* p)
+void destroy_process(struct process_t* p)
 {
 	free(p);
 }
