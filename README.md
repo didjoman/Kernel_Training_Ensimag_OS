@@ -4,6 +4,7 @@ kernel_Ensimag_OS
 Building of a mini kernel :
 ---------------------------
 The aim of this project is to explore and develop the basic features of an OS. In order to do so, we write low-level code that creates interactions between the system and the hardware.
+
 This project contains 3 main objectives : 
 - Write a pilot for a standard PC screen.
 - Manage the time by using the hardware clock of the computer.
