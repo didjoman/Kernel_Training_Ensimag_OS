@@ -1,4 +1,4 @@
-kernel_Ensimag_OS
+Kernel_Training_Ensimag_OS
 =================
 
 Building of a mini kernel :
