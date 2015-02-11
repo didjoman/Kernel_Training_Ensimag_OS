@@ -18,13 +18,19 @@ uint16_t *ptr_mem(uint32_t lig, uint32_t col)
 }
 
 /*
-  warranty : Writes the char c at the given coordinates, with the given colors.
+ *   warranty : Writes the char c at the given coordinates, with the given colors.
 */
 void ecrit_car(uint32_t lig, uint32_t col, char c, struct char_format *format)
 {
 	// The first Byte contains the ASCII code of the char
 	// The second Byte contains the format of the char.
-	*ptr_mem(lig, col) = (format->blink << 15) | (format->bg_color << 12) | (format->fg_color << 8) | (c);
+	*ptr_mem(lig, col) = 
+                (format->blink << 15) |
+                (format->bg_color << 12) |
+                (format->fg_color << 8) | 
+                (c);
+       // TODO : For a more secure code we should have 
+       //          (blink & 1)<<15 | (bg & 0x7)<<12 | (fg & 0xF)<<8
 }
 
 /*
@@ -64,16 +70,16 @@ void get_curseur(uint32_t* lig, uint32_t* col)
 void efface_ecran(void)
 {
 	// We set all Bytes to 0 (char 0 + black + not blinking)
-	memset((uint16_t*)0xB8000, 0, SCREEN_SIZE);
+	memset((uint16_t*)0xB8000, 0, SCREEN_MEM_SIZE);
 }
 
 /*
   Warranty : Set the pointeur given as parameter with the format global variable
+             Warning, the pointer passed is not a copy. 
 */
 void get_text_format(struct char_format * f)
 {
 	*f= format;
-	// TODO : should I make a copy of the format ?
 }
 
 /*
@@ -107,10 +113,13 @@ void traite_car(char c)
 	if(c >= 32 && c <= 126){
 	      	// We print the character at the cursor position
 		ecrit_car(lig, col, c, &format);
-		// The we update the cursor position
+		// Then we move the cursor forward position
 		if(++col >= 80){
 			col = 0;
 			if(++lig >= 25){
+                                // If we are in pos 79 * 24 (full screen), we
+                                // put the cursor pos at the beginning of the next line.
+                                // Therefore, we can never really fulfill the screen.
 				--lig;
 				defilement();
 			}
@@ -121,16 +130,26 @@ void traite_car(char c)
 		case '\b': // moves the cursor backward if it's not in first column
 			if(col != 0)
 				--col;
-			break;
+                        break;
 		case '\t': // jumps to the next tab
 			if(col != 80){
 				while((++col % 8) != 0);
+                                // Clear the screen  at place and size of tab
 				memset(addr, 0, (ptr_mem(lig, col) - addr)*2);
+                                // if the tab is out of screen, then we go to 
+                                // the next line beginning
+                                if(++col >= 80){
+                                        col = 0;
+                                        if(++lig >= 25){
+                                                --lig;
+                                                defilement();
+                                        }
+                                }
 			}
 			break;
 		case '\n': // Move the cursor to the next line, first col.
 			col = 0;
-			lig = (lig<79) ? lig + 1 : 0;
+                        ++lig;
 			memset(addr, 0, (ptr_mem(lig, col) - addr)*2);
 			if(lig >= SCREEN_NB_LINES){
 				--lig;
@@ -154,7 +173,7 @@ void traite_car(char c)
 */
 void defilement(void)
 {
-	memmove(ptr_mem(0, 0), ptr_mem(1, 0), SCREEN_SIZE);
+	memmove(ptr_mem(0, 0), ptr_mem(1, 0), SCREEN_MEM_SIZE); 
 }
 
 /*
@@ -167,8 +186,3 @@ void console_putbytes(char *chaine, int32_t taille)
 		traite_car(chaine[i++]);
 	}
 }
-
-// QUESTION, do we store the cursor position ? Or do we "ask" it (with inb) ?
-// |--> Answer : It's better to ask it.
-
-// QUESTION, when doing a defilement, should we clear the new line or not ?

@@ -1,2 +1,26 @@
-Seance 1 => put_bytes.c
-Seance 2 => uptime.c
+
+Le projet a été terminé, testé et fonctionne.
+
+*** For the need of the project, these new files have been created :
+
+put_bytes.c/.h                : enables to print things on the screen
+
+uptime.c/.h                   : used to the clock interruptions
+
+process.c/.h                  : defines a data struct + functions to 
+			        create/ destroy a process.
+
+process_queue.c/.h            : data structure to store the processes (FIFO)
+
+process_priority_queue.c/.h   : data structure to store the processes 
+			        (FIFO organized by priority order)
+
+scheduler.c/.h 		      : preemptive scheduler used to manage the 
+			        processes and to equally distribute the 
+				CPU time between all processes
+
+
+*** The following files have been completed : 
+
+start.c		  	     : Initialises the scheduler & processes and 
+			       launches the execution of CPU.

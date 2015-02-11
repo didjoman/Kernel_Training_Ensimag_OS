@@ -8,7 +8,8 @@
 // The screen contains 80 cols, 25 lines, each pixel = 2 Bytes 
 #define SCREEN_NB_COLS 80
 #define SCREEN_NB_LINES 25
-#define SCREEN_SIZE 2 * SCREEN_NB_COLS * SCREEN_NB_LINES
+#define SCREEN_SIZE SCREEN_NB_COLS * SCREEN_NB_LINES
+#define SCREEN_MEM_SIZE 2 * SCREEN_SIZE
  
 #define PORT_CURSOR_CMD 0x3D4
 #define PORT_CURSOR_DATA 0x3D5
