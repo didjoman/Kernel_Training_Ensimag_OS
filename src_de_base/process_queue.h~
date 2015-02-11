@@ -1,8 +1,0 @@
-#ifndef PROCESS_QUEUE_H
-#define PROCESS_QUEUE_H
-
-
-struct proc_queue{
-        struct Process* head;
-        struct Process* tail;
-};
